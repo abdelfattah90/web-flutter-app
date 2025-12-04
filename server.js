@@ -1,43 +1,38 @@
 const express = require('express')
 const path = require('path')
-const fs = require('fs')
 
 const app = express()
 const PORT = process.env.PORT || 3000
 
-// Serve static files with correct MIME types
+// Serve static files from 'public' directory
 app.use(
-  express.static(__dirname, {
-    index: false,
+  express.static(path.join(__dirname, 'public'), {
     setHeaders: (res, filePath) => {
+      // Set correct MIME types
       if (filePath.endsWith('.js')) {
         res.setHeader('Content-Type', 'application/javascript; charset=utf-8')
       } else if (filePath.endsWith('.wasm')) {
         res.setHeader('Content-Type', 'application/wasm')
       } else if (filePath.endsWith('.json')) {
         res.setHeader('Content-Type', 'application/json; charset=utf-8')
+      } else if (filePath.endsWith('.html')) {
+        res.setHeader('Content-Type', 'text/html; charset=utf-8')
       }
     },
   })
 )
 
-// Serve index.html for all routes
+// Catch-all route - serve index.html for any route
 app.get('*', (req, res) => {
-  const indexPath = path.join(__dirname, 'index.html')
-
-  // Check if file exists
-  if (fs.existsSync(indexPath)) {
-    res.sendFile(indexPath)
-  } else {
-    res.status(404).send('index.html not found')
-  }
+  res.sendFile(path.join(__dirname, 'public', 'index.html'))
 })
 
-// For Vercel serverless
-if (process.env.VERCEL) {
-  module.exports = app
-} else {
+// Start server (for local development)
+if (require.main === module) {
   app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`)
+    console.log(`🚀 Server running on http://localhost:${PORT}`)
   })
 }
+
+// Export for Vercel
+module.exports = app
